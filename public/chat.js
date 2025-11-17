@@ -51,7 +51,7 @@ async function sendMessage() {
   userInput.disabled = true;
   sendButton.disabled = true;
 
-  // Add user message to chat
+  // Add user message to chat (SAFE)
   addMessageToChat("user", message);
 
   // Clear input
@@ -65,10 +65,14 @@ async function sendMessage() {
   chatHistory.push({ role: "user", content: message });
 
   try {
-    // Create new assistant response element
+    // Create new assistant response element (NO innerHTML)
     const assistantMessageEl = document.createElement("div");
     assistantMessageEl.className = "message assistant-message";
-    assistantMessageEl.innerHTML = "<p></p>";
+
+    const assistantP = document.createElement("p");
+    assistantP.textContent = ""; // mulai kosong
+    assistantMessageEl.appendChild(assistantP);
+
     chatMessages.appendChild(assistantMessageEl);
 
     // Scroll to bottom
@@ -105,21 +109,25 @@ async function sendMessage() {
       // Decode chunk
       const chunk = decoder.decode(value, { stream: true });
 
-      // Process SSE format
+      // Process SSE-style lines
       const lines = chunk.split("\n");
       for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
         try {
-          const jsonData = JSON.parse(line);
+          const jsonData = JSON.parse(trimmed);
           if (jsonData.response) {
             // Append new content to existing text
             responseText += jsonData.response;
-            assistantMessageEl.querySelector("p").textContent = responseText;
+            // PENTING: pakai textContent, bukan innerHTML
+            assistantP.textContent = responseText;
 
             // Scroll to bottom
             chatMessages.scrollTop = chatMessages.scrollHeight;
           }
         } catch (e) {
-          console.error("Error parsing JSON:", e);
+          console.error("Error parsing JSON line:", e, trimmed);
         }
       }
     }
@@ -146,11 +154,17 @@ async function sendMessage() {
 
 /**
  * Helper function to add message to chat
+ * SELALU tampilkan sebagai teks (bukan HTML)
  */
 function addMessageToChat(role, content) {
   const messageEl = document.createElement("div");
   messageEl.className = `message ${role}-message`;
-  messageEl.innerHTML = `<p>${content}</p>`;
+
+  const p = document.createElement("p");
+  // INI YANG PENTING: textContent, bukan innerHTML
+  p.textContent = content;
+
+  messageEl.appendChild(p);
   chatMessages.appendChild(messageEl);
 
   // Scroll to bottom
