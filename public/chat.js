@@ -161,12 +161,10 @@ function addMessageToChat(role, content) {
   messageEl.className = `message ${role}-message`;
 
   const p = document.createElement("p");
-  // INI YANG PENTING: textContent, bukan innerHTML
-  p.textContent = content;
+  p.textContent = content;  // ✅ html, php, emoji semua jadi teks biasa
 
   messageEl.appendChild(p);
   chatMessages.appendChild(messageEl);
 
-  // Scroll to bottom
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
